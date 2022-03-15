@@ -1,0 +1,215 @@
+#1 Copy Module :copying single file from host to remote machine
+
+--- 
+- 
+  hosts: slave1
+  name: play1
+  sudo: true
+  tasks: 
+    - 
+      copy: 
+        dest: /home/ubuntu/test_file
+        src: test_file
+      name: "copy file to remote host"
+
+
+#2 Copy Module :copying multiple files from host to remote machine
+
+--- 
+- 
+  become: true
+  hosts: slave1
+  name: play1
+  tasks: 
+    - 
+      copy: 
+        dest: "/home/ubuntu/{{ item }}"
+        src: "{{ item }}"
+      name: "copy file to remote host"
+      with_items: 
+        - test_file1
+        - test_file2
+
+#3 Write text to file
+
+copy4.yml
+
+--- 
+- 
+  hosts: slave1
+  name: play1
+  become: true
+  tasks: 
+    - 
+      copy: 
+        content: "Hello , World!This is new text added from playbook.\n"
+        dest: /home/ubuntu/test_file
+      name: "write text in to remote file"
+
+
+
+
+Fetch module can works on files only not on directories
+
+#fetching/getting file from remote machine to host machine
+#make sure test_file in remote machine  
+
+#1 getting file from remote
+--- 
+- 
+  hosts: slave1
+  name: play1
+  sudo: true
+  tasks: 
+    - 
+      file: 
+        path: /home/ubuntu/test_file
+        src: touch
+      name: "ensure a file exists"
+    - 
+      fetch: 
+        dest: feteched/
+        src: /home/ubuntu/test_file
+      name: "fetch test_file"
+
+
+#  fetching file file with flat
+
+
+
+---
+-
+  hosts: slave1
+  name: play1
+  become: true
+  tasks:
+
+    -
+      fetch:
+        dest: "fetched/test_file"
+        flat: true
+        src: "/home/ubuntu/test_file"
+      name: "fetch test_file"
+
+
+# fetching multiple files
+
+---
+-
+  hosts: slave1
+  name: play1
+  become: true
+  tasks:
+
+    -
+      fetch:
+        dest: "fetched/"
+        flat: true
+        src: "/home/ubuntu/{{ item }}"
+      with_items:
+        - test_file1
+        - test_file2
+      name: "fetch test_file"
+
+
+
+Ansible Template Module :
+
+1.Template a single file
+2.Set Permissions on Templated Files
+3.Template Multiple Files.
+
+What does the Ansible template module do?
+
+1) Ansible’s template module transfers templated files to remote hosts. 
+2) It works similarly to the copy module, but with 2 major differences:
+
+i)template looks for templates in ./templates/ when you supply a relative path for src (instead of ./files/ for copy)
+
+ii)You can use the jinja2 templating language in your files, which will be templated out separately for each remote host
+
+
+Special variables available inside templates
+The following variables are available inside templates in addition to all available Ansible variables:
+
+ansible_managed - Usually put at the start of a templated file to indicate that the file is managed by Ansible and should not be modified manually. Configurable in ansible.cfg, please see the ansible_managed section of Ansible’s configuration guide for more details.
+
+template_host - The node name of the host that executed the template (the local host).
+
+template_uid - The numeric user id of the template file owner on the local host.
+
+template_path- The absolute path to the template on the local host.
+
+template_fullpath - Same as template_path in my experience.
+
+template_run_date - The date the template was rendered.
+
+Note : if templates folder resides in root then no need to mention absolute path in src, else full path required. 
+
+===============================================================
+Note : Create templates folder @ in working folder
+templates/my_app.conf.j2
+
+Date = {{ template_run_date }}
+env = {{ env }}
+local_ip = {{ ansible_host }}
+Host Ip = {{ template_host  }}
+
+
+play1.yml
+-------------------------
+
+--- 
+- 
+  hosts: slave1
+  name: play1
+  tasks: 
+    - 
+      become: true
+      name: "template file on to remote hosts"
+      template: 
+        dest: /etc/my_app.conf
+        src: my_app.conf.j2
+  vars: 
+    env: staging
+      
+
+How to copy multiple templates files :
+
+templates/my_app-release.j2
+
+MyApp {{ my_app_version }}
+Date = {{ template_run_date }}
+env = {{ env }}
+Host Ip = {{ template_host  }}
+
+play3.yml
+
+--- 
+- 
+  hosts: slave1
+  name: play1
+  vars: 
+    env: Developement
+    my_app_version: v1.1.2
+  tasks: 
+    - 
+      name: "template file on to remote hosts"
+      template: 
+        dest: "/etc/{{ item }}"
+        group: root
+        mode: 0600
+        owner: root
+        src: "{{ item }}.j2"
+      become: true
+      with_items:
+       - my_app.conf
+       - my_app-release
+
+
+
+
+
+
+
+
