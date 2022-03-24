@@ -1,0 +1,53 @@
+1)Launch JMaster Instance (ubuntu20.04)
+2)Run below commands
+
+nano jinstall.sh
+  sudo apt-get update
+  sudo apt install ca-certificates
+  sudo apt-get install openjdk-11-jdk -y
+  wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+  sudo sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ >  /etc/apt/sources.list.d/jenkins.list'
+  sudo apt-get update
+  sudo apt-get install jenkins -y
+
+ls -ll jinstall.sh
+
+chmod +x jinstall.sh
+
+ls -ll jinstall.sh
+
+./jinstall.sh 
+
+3)open browser http://public-ip:8080
+4)cat /var/lib/jenkins/secrets/initialAdminPassword
+
+demo#1:
+5)Login into Jenkins
+
+1)Create New Freestyle Job to get github project into Jenkins Server.
+2)Build the Job and observe the console output
+
+demo#2: crone job demo
+
+1)Create New Freestyle Job
+2)use Build Trigger
+   check Build periodically and schedule
+
+demo#3: chain jobs
+
+1)Create New Freestyle Job1,Job2,Job3
+  configure this option for chain jobs
+2)Build Triggers
+        Build aftetr oother projects are built
+
+demo#4: Parameterised Job
+1)Job Name: MavenJob2
+       i)This project is parameterized
+         Choice Parameter
+         name:branch
+         choices: 
+                   master
+                   dev
+       ii)Source Code Management : Git
+       iii)Branches to build : $(branch)
+       iv)Build with parameter
